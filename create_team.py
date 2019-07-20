@@ -45,28 +45,25 @@ def main():
 	max_points = 0
 	team = []
 	max_price = 830
+	captain_points_final = 0
 	for formation in formations:
 		for index, player in rel_data.iterrows():
 			current_team = []
 			current_price = 0
 			current_points = 0
 			player_types = { 1 : 0, 2:0, 3:0, 4:0}
-			team_nums = dict()
+			team_nums = {team : 0 for team in rel_data['team'].unique()}
 			for i, n_player in rel_data.iloc[index:].iterrows():
 				if not check_if_position_valid(formation, n_player['element_type'], player_types):
 					continue
-				elif current_price + int(n_player['now_cost']) > max_price:
+				if current_price + int(n_player['now_cost']) > max_price:
 					continue
-				try:
-					if team_nums[n_player['team']] > 2:
-						continue
-					else:
-						team_nums[n_player['team']] += 1
-				except KeyError:
-					team_nums[n_player['team']] = 1
+				if team_nums[n_player['team']] > 2:
+					continue
 				else:
 					current_team.append(n_player.to_dict())
 					player_types[n_player['element_type']] += 1
+					team_nums[n_player['team']] += 1
 					current_price += int(n_player['now_cost'])
 					current_points += int(n_player['total_points'])
 					if len(current_team) == 11:
@@ -79,10 +76,13 @@ def main():
 			if current_points > max_points:
 				team = current_team
 				max_points = current_points
+				captain_points_final = captain_points
 	team_df = pd.DataFrame(team)
 	team_df.sort_values(by  = 'element_type', inplace = True)
 	print(team_df)
+	print(captain_points_final)
 	print(sum(team_df['now_cost']))
+	print(sum(team_df['total_points']))
 
 
 
