@@ -30,7 +30,8 @@ def get_data():
 
 def main():
 	data = get_data()
-	print(data)
+	data.to_csv('data.csv')
+	data.to_pickle("data.pkl")
 
 if __name__ == "__main__":
 	main()
