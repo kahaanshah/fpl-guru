@@ -56,6 +56,7 @@ def main():
 			team = current_team
 			max_points = current_points
 	team_df = pd.DataFrame(team)
+	team_df.sort_values(by  = 'element_type', inplace = True)
 	print(team_df)
 
 
