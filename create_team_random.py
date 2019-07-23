@@ -12,7 +12,7 @@ class Team():
 		self.points = 0
 		self.team_dict = {i:0 for i in range(1, 21)}
 		self.position_dict = {i:0 for i in range(1,5)}
-		self.low_player_points = 1000
+		self.captain_points = 0
 		if players:
 			for player in players:
 				self.add_player(player)
@@ -77,12 +77,14 @@ class Team():
 		self.points -= player_out['total_points']
 		self.team_dict[player_out['team']] -= 1
 		self.position_dict[player_out['element_type']] -= 1
-		if player_out['total_points'] == self.low_player_points:
-			low_points = 1000
-			for low_player in self.team:
-				if low_player['total_points'] < low_points:
-					low_points = low_player['total_points']
-			self.low_player_points = low_points
+		if player_out['total_points'] == self.captain_points:
+			captain_points = 0
+			for high_player in self.team:
+				if high_player['total_points'] > captain_points:
+					captain_points = high_player['total_points']
+			self.points -= self.captain_points
+			self.captain_points = captain_points
+			self.points += self.captain_points
 		del self.team[i_out]
 		self.add_player(player_in)
 
@@ -94,7 +96,11 @@ class Team():
 		self.points += player['total_points']
 		self.team_dict[player['team']] += 1
 		self.position_dict[player['element_type']] += 1
-		self.low_player_points = min(player['total_points'], self.low_player_points)
+		if player['total_points'] > self.captain_points:
+			self.points -= self.captain_points
+			self.captain_points = player['total_points']
+			self.points += self.captain_points
+
 
 	def team_valid(self):
 		if len(self.team) != 11:
