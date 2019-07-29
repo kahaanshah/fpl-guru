@@ -1,0 +1,8 @@
+import aiohttp
+import asyncio
+from fpl import FPL
+async def main():
+async with aiohttp.ClientSession() as session:
+fpl = FPL(session)
+...         player = await fpl.get_player(302)
+...     print(player)

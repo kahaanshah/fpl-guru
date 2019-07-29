@@ -28,10 +28,10 @@ def get_data():
 	data_df = pd.read_json(data, orient = 'records')
 	return data_df
 
-def main():
+def run_fpl_load_manual():
 	data = get_data()
 	data.to_csv('data.csv')
 	data.to_pickle("data.pkl")
 
 if __name__ == "__main__":
-	main()
+	run_fpl_load_manual()

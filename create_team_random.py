@@ -3,7 +3,7 @@ import random
 import time
 import multiprocessing as mp 
 
-class Team():
+class Fantasy_Team():
 
 	def __init__(self, players = None):
 		self.team = []
@@ -121,9 +121,9 @@ class Team():
 
 
 def create_random_team(players):
-	new_team = Team()
+	new_team = Fantasy_Team()
 	while(not new_team.team_valid()):
-		new_team = Team()
+		new_team = Fantasy_Team()
 		while(len(new_team.team) < 11):
 			rand = random.randint(0, len(players)-1)
 			if new_team.valid_player(players.iloc[rand]):
@@ -153,24 +153,28 @@ def func(data, num, return_dict):
 	return_dict[max_points] = max_team
 	return (max_team, max_points)
 	
-
-if __name__ == "__main__":
-	orig_time = time.time()
+def main():
 	data = pd.read_csv('xP_data.csv')
 	data = data[data['minutes']>1500]
-	data = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'xP']].copy()
-	manager = mp.Manager()
-	return_dict = manager.dict()
-	jobs = []
-	for _ in range(4):
-		p = mp.Process(target = func, args = (data, 250, return_dict))
-		jobs.append(p)
-		p.start()
-	for job in jobs:
-		job.join()
-	print(return_dict[max(return_dict.keys())])
-	print(max(return_dict.keys()))
-	print(time.time() - orig_time)
+	for i in range(10):
+		data_temp = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'GW'+str(i)]].copy()
+		data_temp.rename(columns = {'GW'+str(i) : 'xP'}, inplace = True)
+		manager = mp.Manager()
+		return_dict = manager.dict()
+		jobs = []
+		for _ in range(4):
+			p = mp.Process(target = func, args = (data_temp, 250, return_dict))
+			jobs.append(p)
+			p.start()
+		for job in jobs:
+			job.join()
+		print(return_dict[max(return_dict.keys())])
+		print(max(return_dict.keys()))
+		print(return_dict[max(return_dict.keys())].now_cost)
+
+if __name__ == "__main__":
+	main()
+	
 
 
 

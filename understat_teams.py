@@ -94,7 +94,7 @@ async def get_team_data(team):
 		data_df = pd.read_json(data, orient='records')
 		return data_df
 
-if __name__ == "__main__":
+def main():
 	with open('players_xg_xa.pickle', 'rb') as handle:
 		players_dict = pickle.load(handle)
 	loop = asyncio.get_event_loop()
@@ -110,8 +110,9 @@ if __name__ == "__main__":
 	with open('teams_data.pickle', 'wb') as handle:
 		pickle.dump(teams, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		
 
+if __name__ == "__main__":
+	main()
 
 
 

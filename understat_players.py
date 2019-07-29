@@ -29,11 +29,21 @@ fpl_to_understat= {1:'Arsenal',
 intra_transfers= {122 : 'Crystal Palace', 
 265 : 'Newcastle United',
 205 : 'Manchester City',
-
 }
 
 difficulty = pd.read_csv('EPL_Fixturelist_1920.csv')
 
+team_games_played = dict()
+
+def get_team_games_played(team):
+	games_played = {i:0 for i in range(2,6)}
+	for index, row in difficulty.iterrows():
+		if row['Team'] == team:
+			continue
+		else:
+			games_played[row['Home']] += 1
+			games_played[row['Away']] += 1
+	return games_played
 
 class Player():
 
@@ -48,7 +58,11 @@ class Player():
 	def calculate_xg_xa(self, understat_data):
 		self.xg = {i:0 for i in range(2,6)}
 		self.xa = {i:0 for i in range(2,6)}
-		self.games_played = {i:0 for i in range(2,6)}
+		try:
+			self.games_played = team_games_played[self.team]
+		except KeyError:
+			self.games_played = get_team_games_played(self.team)
+			team_games_played[self.team] = self.games_played
 		self.minutes_played = {i:0 for i in range(2,6)}
 		if self.former_team:
 			team = self.former_team
@@ -59,13 +73,11 @@ class Player():
 				self.xg[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += row['xG']
 				self.xa[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += row['xA']
 				self.minutes_played[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += row['time']
-				self.games_played[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += 1
 
 			elif row['a_team'] == team:
 				self.xg[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += row['xG']
 				self.xa[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += row['xA']
 				self.minutes_played[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += row['time']
-				self.games_played[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += 1
 			else: 
 				continue
 				
@@ -80,11 +92,12 @@ class Player():
 				else:
 					continue
 
+
 	def add_xga(self, xga):
 		self.xga = xga
 
-	def calc_xp(self, team_data):
-		fixture = team_data.fixtures[0]
+	def calc_xp(self, fixture_num, team_data):
+		fixture = team_data.fixtures[fixture_num]
 		if self.player['element_type'] == 1 or self.player['element_type'] == 2:
 			xgp = self.xg[fixture] * 6
 			xap = self.xa[fixture] * 3
@@ -103,6 +116,7 @@ class Player():
 			xgp = self.xg[fixture] * 4
 			xap = self.xg[fixture] * 3
 			self.xp = xgp + xap + 2
+		return self.xp
 
 
 def xga_to_xp(xga):
@@ -129,7 +143,7 @@ async def get_player_data(player):
 
 
 
-if __name__ == "__main__":
+def main():
 	player_data = pd.read_csv('fpl_data.csv')
 	difficulty = pd.read_csv('EPL_Fixturelist_1920.csv')
 	players_dict = init_players_dict()
@@ -149,6 +163,6 @@ if __name__ == "__main__":
 	with open('players_xg_xa.pickle', 'wb') as handle:
 		pickle.dump(players_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	
-
-
+if __name__ == "__main__":
+	main()
 

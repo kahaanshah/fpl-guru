@@ -1,0 +1,4 @@
+import fpl_load_manual
+
+if __name__ == "__main__":
+	run_fpl_load_manual()

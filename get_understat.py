@@ -35,6 +35,9 @@ async def main():
 		data_df.to_csv('understat.csv')
 		data_df.to_pickle('data.pkl')
 
-if __name__ == "__main__":
+def run_get_understat():
 	loop = asyncio.get_event_loop()
 	loop.run_until_complete(main())
+
+if __name__ == "__main__":
+	run_get_understat()
