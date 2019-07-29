@@ -6,6 +6,8 @@ import aiohttp
 import time
 import pickle
 
+
+
 fpl_to_understat= {1:'Arsenal', 
 3:'Bournemouth',
 4: 'Brighton',
@@ -47,6 +49,7 @@ class Player():
 		self.xg = {i:0 for i in range(2,6)}
 		self.xa = {i:0 for i in range(2,6)}
 		self.games_played = {i:0 for i in range(2,6)}
+		self.minutes_played = {i:0 for i in range(2,6)}
 		if self.former_team:
 			team = self.former_team
 		else:
@@ -55,11 +58,13 @@ class Player():
 			if row['h_team'] == team:
 				self.xg[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += row['xG']
 				self.xa[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += row['xA']
+				self.minutes_played[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += row['time']
 				self.games_played[difficulty[difficulty['Team'] == row['a_team']]['Home'].values[0]] += 1
 
 			elif row['a_team'] == team:
 				self.xg[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += row['xG']
 				self.xa[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += row['xA']
+				self.minutes_played[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += row['time']
 				self.games_played[difficulty[difficulty['Team'] == row['h_team']]['Away'].values[0]] += 1
 			else: 
 				continue
@@ -75,12 +80,39 @@ class Player():
 				else:
 					continue
 
+	def add_xga(self, xga):
+		self.xga = xga
+
+	def calc_xp(self, team_data):
+		fixture = team_data.fixtures[0]
+		if self.player['element_type'] == 1 or self.player['element_type'] == 2:
+			xgp = self.xg[fixture] * 6
+			xap = self.xa[fixture] * 3
+			xgap = xga_to_xp(self.xga[fixture])
+			self.xp = xgp + xap + xgap + 2
+		elif self.player['element_type'] == 3:
+			xgp = self.xg[fixture] * 5
+			xap = self.xg[fixture] * 3
+			xga_f = xga_to_xp(self.xga[fixture])
+			if xga_f > 1:
+				xgap = 0
+			else:
+				xgap = 1-xga_f
+			self.xp = xgp + xap + xgap + 2
+		elif self.player['element_type'] == 4:
+			xgp = self.xg[fixture] * 4
+			xap = self.xg[fixture] * 3
+			self.xp = xgp + xap + 2
+
+
+def xga_to_xp(xga):
+	return 0.0258*(xga**4) - 0.4035*(xga**3) + 2.2435*(xga*xga) - 5.072*xga + 4.1468
 
 
 def init_players_dict():
 	players_dict = dict()
 	for value in fpl_to_understat.values():
-		players_dict[value] = []
+		players_dict[value] = dict()
 	return players_dict
 
 
@@ -101,7 +133,7 @@ if __name__ == "__main__":
 	player_data = pd.read_csv('fpl_data.csv')
 	difficulty = pd.read_csv('EPL_Fixturelist_1920.csv')
 	players_dict = init_players_dict()
-	for index, player in player_data.iloc[340:].iterrows():
+	for index, player in player_data.iterrows():
 		if player['understat_id'] != 0:
 			loop = asyncio.get_event_loop()
 			player_matches = loop.run_until_complete(get_player_data(player))
@@ -111,7 +143,7 @@ if __name__ == "__main__":
 			except ValueError:
 				print(player)
 				continue
-			players_dict[fpl_to_understat[player['team']]].append(new_player)
+			players_dict[fpl_to_understat[player['team']]][player['id']] = new_player
 		print(index)
 	print(players_dict)
 	with open('players_xg_xa.pickle', 'wb') as handle:

@@ -60,7 +60,7 @@ class Team():
 			if p['element_type'] == player['element_type']:
 				if player['id'] in self.player_set:
 					continue
-				if p['total_points'] > player['total_points']:
+				if p['xP'] > player['xP']:
 					continue
 				if (player['now_cost'] - p['now_cost']) + self.now_cost > 830:
 					continue
@@ -74,14 +74,14 @@ class Team():
 	def do_substitution(self, i_out, player_out, player_in):
 		self.now_cost -= player_out['now_cost']
 		self.player_set.remove(player_out['id'])
-		self.points -= player_out['total_points']
+		self.points -= player_out['xP']
 		self.team_dict[player_out['team']] -= 1
 		self.position_dict[player_out['element_type']] -= 1
-		if player_out['total_points'] == self.captain_points:
+		if player_out['xP'] == self.captain_points:
 			captain_points = 0
 			for high_player in self.team:
-				if high_player['total_points'] > captain_points:
-					captain_points = high_player['total_points']
+				if high_player['xP'] > captain_points:
+					captain_points = high_player['xP']
 			self.points -= self.captain_points
 			self.captain_points = captain_points
 			self.points += self.captain_points
@@ -93,12 +93,12 @@ class Team():
 		self.team.append(player)
 		self.now_cost += player['now_cost']
 		self.player_set.add(player['id'])
-		self.points += player['total_points']
+		self.points += player['xP']
 		self.team_dict[player['team']] += 1
 		self.position_dict[player['element_type']] += 1
-		if player['total_points'] > self.captain_points:
+		if player['xP'] > self.captain_points:
 			self.points -= self.captain_points
-			self.captain_points = player['total_points']
+			self.captain_points = player['xP']
 			self.points += self.captain_points
 
 
@@ -136,14 +136,14 @@ def make_team_better(team, sorted_data):
 	return team
 
 def func(data, num, return_dict):
-	sorted_data = data.sort_values(by = 'total_points', inplace = False, ascending = False)
+	sorted_data = data.sort_values(by = 'xP', inplace = False, ascending = False)
 	max_points = 0
 	max_team = None
 	for i in range(num):
 		team = create_random_team(data)
 		sorted_data = sorted_data.sample(frac=1).reset_index(drop = True)
 		for index, p in sorted_data.iterrows():
-			#if p['total_points'] < team.low_player_points:
+			#if p['xP'] < team.low_player_points:
 				#break
 			team.substitute_player(p)
 		if team.points >  max_points:
@@ -156,8 +156,9 @@ def func(data, num, return_dict):
 
 if __name__ == "__main__":
 	orig_time = time.time()
-	data = pd.read_pickle('data.pkl')
-	data = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'total_points']].copy()
+	data = pd.read_csv('xP_data.csv')
+	data = data[data['minutes']>1500]
+	data = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'xP']].copy()
 	manager = mp.Manager()
 	return_dict = manager.dict()
 	jobs = []
