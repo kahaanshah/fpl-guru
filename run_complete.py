@@ -13,4 +13,4 @@ if __name__ == "__main__":
 	understat_players.main()
 	understat_teams.main()
 	create_xp.main()
-	create_team_random.main()
+	create_team_pulp.main()

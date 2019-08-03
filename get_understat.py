@@ -1,7 +1,5 @@
 import json 
 import requests
-from bs4 import BeautifulSoup
-from selenium import webdriver
 import asyncio
 import aiohttp
 from understat import Understat 

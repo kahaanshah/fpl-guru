@@ -114,6 +114,9 @@ class Fantasy_Team():
 		else:
 			return True
 
+	def create_team_id(self):
+		self.team_id = hash(tuple(sorted(self.player_set)))
+
 	def __repr__(self):
 		team_df = pd.DataFrame(self.team)
 		team_df.sort_values(by  = 'element_type', inplace = True)
@@ -149,31 +152,66 @@ def func(data, num, return_dict):
 		if team.points >  max_points:
 			max_points = team.points
 			max_team = team
-		
+		print(i)
 	return_dict[max_points] = max_team
 	return (max_team, max_points)
 	
+def func_list(num, data):
+	sorted_data = data.sort_values(by = 'xP', inplace = False, ascending = False)
+	teams = []
+	for i in range(num):
+		new_team = create_random_team(data)
+		sorted_data = sorted_data.sample(frac=1).reset_index(drop = True)
+		for index, p in sorted_data.iterrows():
+			#if p['xP'] < team.low_player_points:
+				#break
+			new_team.substitute_player(p)
+		new_team.create_team_id()
+		if new_team.team_id not in teams:
+			teams.append(new_team)
+		print(i)
+	teams.sort(key=lambda x: x.points, reverse = True)
+	return teams
+		
+
 def main():
 	data = pd.read_csv('xP_data.csv')
 	data = data[data['minutes']>1500]
-	for i in range(10):
-		data_temp = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'GW'+str(i)]].copy()
-		data_temp.rename(columns = {'GW'+str(i) : 'xP'}, inplace = True)
-		manager = mp.Manager()
-		return_dict = manager.dict()
-		jobs = []
-		for _ in range(4):
-			p = mp.Process(target = func, args = (data_temp, 250, return_dict))
-			jobs.append(p)
-			p.start()
-		for job in jobs:
-			job.join()
-		print(return_dict[max(return_dict.keys())])
-		print(max(return_dict.keys()))
-		print(return_dict[max(return_dict.keys())].now_cost)
+	data = data[(data['chance_of_playing_next_round'] != 0) &
+		(data['chance_of_playing_next_round'] != 25) &
+		(data['chance_of_playing_next_round'] != 50) &
+		(data['chance_of_playing_next_round'] != 75)]
+	data_temp = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'Aggregate_xp']].copy()
+	data_temp.rename(columns = {'Aggregate_xp' : 'xP'}, inplace = True)
+	manager = mp.Manager()
+	return_dict = manager.dict()
+	jobs = []
+	for _ in range(4):
+		p = mp.Process(target = func, args = (data_temp, 250, return_dict))
+		jobs.append(p)
+		p.start()
+	for job in jobs:
+		job.join()
+	print(return_dict[max(return_dict.keys())])
+	print(max(return_dict.keys()))
+	print(return_dict[max(return_dict.keys())].now_cost)
 
+def unparalleled_main():
+	data = pd.read_csv('xP_data.csv')
+	data = data[data['minutes']>1500]
+	data = data[(data['chance_of_playing_next_round'] != 0) &
+		(data['chance_of_playing_next_round'] != 25) &
+		(data['chance_of_playing_next_round'] != 50) &
+		(data['chance_of_playing_next_round'] != 75)]
+	data_temp = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'Aggregate_xp']].copy()
+	data_temp.rename(columns = {'Aggregate_xp' : 'xP'}, inplace = True)
+	top_teams = func_list(1000, data_temp)
+	top_teams = top_teams[:10]
+	for team in top_teams:
+		print(team.points)
+		print(team)
 if __name__ == "__main__":
-	main()
+	unparalleled_main()
 	
 
 

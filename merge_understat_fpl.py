@@ -29,12 +29,24 @@ def merge_data(fpl_data, understat_data):
 			continue
 		first_name = player['first_name']
 		last_name = player['second_name']
-		is_same = (understat_data['player_name'].str.contains(name) & understat_data['team_title'].str.contains(team))
+		is_same = (understat_data['player_name'].str.contains(name))
 		common = understat_data[is_same]
-		if len(common)<1:
-			is_same = (understat_data['player_name'].str.contains(first_name) & understat_data['player_name'].str.contains(last_name))
+		if len(common) == 1:
+			id_list.append(common['id'].values[0])
+			continue
+		is_same = ((understat_data['first_name'].str.contains(first_name)) & 
+			understat_data['last_name'].str.contains((last_name)))
+		common = understat_data[is_same]
+		if len(common)>1:
+			is_same = (understat_data['first_name'].str.contains(first_name) & 
+				understat_data['team_title'].str.contains(team) &
+				understat_data['last_name'].str.contains(last_name))
 			common = understat_data[is_same]
-		if len(common)<1:
+		elif len(common) == 0:
+			is_same = (understat_data['first_name'].str.contains(first_name) &
+				understat_data['team_title'].str.contains(team))
+			common = understat_data[is_same]
+		if len(common) != 1:
 			id_list.append(0)
 		else:
 			id_list.append(common['id'].values[0])
@@ -44,6 +56,20 @@ def merge_data(fpl_data, understat_data):
 def main():
 	fpl_data = pd.read_csv('data.csv')
 	understat_data = pd.read_csv('understat.csv')
+	first_name = []
+	last_name = []
+	for index, row in understat_data.iterrows():
+		names = row['player_name'].split()
+		first_name.append(names[0])
+		try:
+			last_name.append(names[1]+names[2])
+		except IndexError:
+			try:
+				last_name.append(names[1])
+			except IndexError:
+				last_name.append('')
+	understat_data.insert(2, 'first_name', first_name, False)
+	understat_data.insert(3, 'last_name', last_name, False)
 	id_list = merge_data(fpl_data, understat_data)
 	fpl_data.insert(49, 'understat_id', id_list, False)
 	fpl_data.to_csv('fpl_data.csv')
