@@ -4,6 +4,7 @@ import merge_understat_fpl
 import understat_players
 import understat_teams
 import create_xp
+import create_team_pulp
 import create_team_random
 
 if __name__ == "__main__":
@@ -14,3 +15,4 @@ if __name__ == "__main__":
 	understat_teams.main()
 	create_xp.main()
 	create_team_pulp.main()
+	#create_team_random.main
