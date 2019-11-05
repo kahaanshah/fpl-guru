@@ -27,7 +27,7 @@ fpl_to_understat= {1:'Arsenal',
 async def main():
 	async with aiohttp.ClientSession() as session:
 		understat = Understat(session)
-		data_json = await understat.get_league_players('epl', 2018)
+		data_json = await understat.get_league_players('epl', 2019)
 		data = json.dumps(data_json)
 		data_df = pd.read_json(data, orient='records')
 		data_df.to_csv('understat.csv')

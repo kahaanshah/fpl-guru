@@ -93,12 +93,12 @@ class Fantasy_Team():
 		self.team.append(player)
 		self.now_cost += player['now_cost']
 		self.player_set.add(player['id'])
-		self.points += player['xP']
+		self.points += player['Aggregate_xp']
 		self.team_dict[player['team']] += 1
 		self.position_dict[player['element_type']] += 1
-		if player['xP'] > self.captain_points:
+		if player['Aggregate_xp'] > self.captain_points:
 			self.points -= self.captain_points
-			self.captain_points = player['xP']
+			self.captain_points = player['Aggregate_xp']
 			self.points += self.captain_points
 
 
@@ -117,21 +117,32 @@ class Fantasy_Team():
 	def create_team_id(self):
 		self.team_id = hash(tuple(sorted(self.player_set)))
 
+	def create_random_team(players):
+		new_team = Fantasy_Team()
+		while(not new_team.team_valid()):
+			new_team = Fantasy_Team()
+			while(len(new_team.team) < 11):
+				rand = random.randint(0, len(players)-1)
+				if new_team.valid_player(players.iloc[rand]):
+					new_team.add_player(players.iloc[rand])
+		return new_team
+
+	def create_existing_team(self, team_data, players_data):
+		for index, player in team_data.iloc[0:11].iterrows():
+			new_player = players_data[players_data['id'] == player['element']]
+			new_player = new_player[['web_name', 'id', 'team', 'element_type', 'now_cost', 'Aggregate_xp']]
+			new_player = new_player.reset_index(drop = True)
+			new_player = new_player.iloc[0]
+			self.add_player(new_player)
+
 	def __repr__(self):
 		team_df = pd.DataFrame(self.team)
+		team_df.to_csv('trial.csv')
 		team_df.sort_values(by  = 'element_type', inplace = True)
 		return team_df.to_string()
 
 
-def create_random_team(players):
-	new_team = Fantasy_Team()
-	while(not new_team.team_valid()):
-		new_team = Fantasy_Team()
-		while(len(new_team.team) < 11):
-			rand = random.randint(0, len(players)-1)
-			if new_team.valid_player(players.iloc[rand]):
-				new_team.add_player(players.iloc[rand])
-	return new_team
+	
 
 def make_team_better(team, sorted_data):
 	for player in sorted_data:
@@ -172,6 +183,9 @@ def func_list(num, data):
 		print(i)
 	teams.sort(key=lambda x: x.points, reverse = True)
 	return teams
+
+
+
 		
 
 def main():
@@ -204,7 +218,6 @@ def unparalleled_main():
 		(data['chance_of_playing_next_round'] != 50) &
 		(data['chance_of_playing_next_round'] != 75)]
 	data_temp = data[['web_name', 'id', 'team', 'element_type', 'now_cost', 'Aggregate_xp']].copy()
-	data_temp.rename(columns = {'Aggregate_xp' : 'xP'}, inplace = True)
 	top_teams = func_list(1000, data_temp)
 	top_teams = top_teams[:10]
 	for team in top_teams:
