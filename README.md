@@ -16,3 +16,7 @@ Creates a fantasy team using player and team expected goals (xG) data from the p
 #### Team Building
 
 - create_team_pulp uses a PuLP optimizer to create the best team possible given the constraints of price of each player, number of players per team, players per position restrictions etc. and calculates the highest possible xP for a team. 
+
+#### Team Position 
+- Team position as of 5/11/2019
+- 15th Percentile
